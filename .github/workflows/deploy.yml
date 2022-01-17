@@ -1,0 +1,32 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Generate dummies
+        run: |
+          mkdir "./deploy/"
+          find "./*/images/" -type f -exec bash -c '
+            DEPLOY_PATH=$(dirname "./deploy/$1");
+            DEPLOY_NAME=$(basename "$1")
+            if [ ! -d $DEPLOY_PATH ]; then
+                mkdir -p "$DEPLOY_PATH"
+            fi
+            touch "$DEPLOY_PATH/$DEPLOY_NAME"
+          ' _ {} \;
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: deploy
+          publish_dir: ./deploy
+          enable_jekyll: true
+          full_commit_message: Deploying to gh-pages from @ ${{ github.sha }} 🚀
+          force_orphan: true
